@@ -46,23 +46,6 @@ That's it!
 
 Note: Since this is a client-side application running without a database, your data lives in the browser's current session. Be sure to use the Data Management tab to export your Backup JSON file before closing the tab if you want to save your progress!
 
-🌐 How to Deploy to GitHub Pages
-
-You can host this application for free on GitHub Pages in just a few minutes:
-
-Create a new repository on GitHub.
-
-Upload the index.html file to the root of the repository.
-
-Go to the repository's Settings tab.
-
-On the left sidebar, click on Pages.
-
-Under Build and deployment > Source, select Deploy from a branch.
-
-Under Branch, select main (or master), and click Save.
-
-Wait a minute or two, and GitHub will provide you with a live, shareable URL to your app!
 
 🛠️ Tech Stack
 
