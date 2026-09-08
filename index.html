@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusMaster Pro</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM (Production Versions) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel Standalone (Compiles JSX directly in the browser) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-200">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // --- Custom SVG Icons to replace external dependencies ---
+    const IconTemplate = ({ d, size = 24, className = "", children }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        {d}{children}
+      </svg>
+    );
+
+    const LayoutDashboard = (p) => <IconTemplate {...p}><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></IconTemplate>;
+    const Timer = (p) => <IconTemplate {...p}><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></IconTemplate>;
+    const KanbanSquare = (p) => <IconTemplate {...p}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 7v7"/><path d="M12 7v4"/><path d="M16 7v9"/></IconTemplate>;
+    const TrendingUp = (p) => <IconTemplate {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></IconTemplate>;
+    const Play = (p) => <IconTemplate {...p}><polygon points="5 3 19 12 5 21 5 3"/></IconTemplate>;
+    const Pause = (p) => <IconTemplate {...p}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></IconTemplate>;
+    const Square = (p) => <IconTemplate {...p}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></IconTemplate>;
+    const Plus = (p) => <IconTemplate {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></IconTemplate>;
+    const CheckCircle2 = (p) => <IconTemplate {...p}><circle cx="12" cy="12" r="10"/><polyline points="9 11 12 14 22 4"/></IconTemplate>;
+    const Circle = (p) => <IconTemplate {...p}><circle cx="12" cy="12" r="10"/></IconTemplate>;
+    const Clock = (p) => <IconTemplate {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconTemplate>;
+    const Info = (p) => <IconTemplate {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></IconTemplate>;
+    const Calendar = (p) => <IconTemplate {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconTemplate>;
+    const Edit2 = (p) => <IconTemplate {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconTemplate>;
+    const Trash2 = (p) => <IconTemplate {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></IconTemplate>;
+    const Folder = (p) => <IconTemplate {...p}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></IconTemplate>;
+    const X = (p) => <IconTemplate {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></IconTemplate>;
+    const Download = (p) => <IconTemplate {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconTemplate>;
+    const Upload = (p) => <IconTemplate {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></IconTemplate>;
+    const Database = (p) => <IconTemplate {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconTemplate>;
+    const FileSpreadsheet = (p) => <IconTemplate {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></IconTemplate>;
+
+    const LEGEND = {
+      DEEP_WORK: { 
+        id: 'DEEP_WORK', 
+        label: 'Deep Work', 
+        color: 'bg-violet-500', 
+        text: 'text-violet-500',
+        border: 'border-violet-500',
+        desc: 'Uninterrupted, high-cognitive demand tasks. Critical path PM items.' 
+      },
+      SHALLOW_WORK: { 
+        id: 'SHALLOW_WORK', 
+        label: 'Shallow Work', 
+        color: 'bg-sky-500', 
+        text: 'text-sky-500',
+        border: 'border-sky-500',
+        desc: 'Logistical, non-demanding tasks. Routine PM execution.' 
+      },
+      COLLABORATION: { 
+        id: 'COLLABORATION', 
+        label: 'Collaboration', 
+        color: 'bg-amber-500', 
+        text: 'text-amber-500',
+        border: 'border-amber-500',
+        desc: 'Meetings, syncs, reviews. Stakeholder management.' 
+      },
+      ADMIN: { 
+        id: 'ADMIN', 
+        label: 'Admin/Overhead', 
+        color: 'bg-slate-500', 
+        text: 'text-slate-500',
+        border: 'border-slate-500',
+        desc: 'Bureaucracy, organization, documentation.' 
+      },
+      REST: { 
+        id: 'REST', 
+        label: 'Rest/Recovery', 
+        color: 'bg-emerald-500', 
+        text: 'text-emerald-500',
+        border: 'border-emerald-500',
+        desc: 'Mandatory downtime to maintain long-term velocity.' 
+      }
+    };
+
+    const generateHeatmapData = () => {
+      const data = [];
+      const today = new Date();
+      for (let i = 89; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        data.push({
+          date: date.toISOString().split('T')[0],
+          level: 0,
+          dominantType: 'DEEP_WORK'
+        });
+      }
+      return data;
+    };
+
+    const initialProjects = [
+      { id: 'proj-1', name: 'Q3 Product Launch', color: 'bg-violet-500' },
+      { id: 'proj-2', name: 'Team Operations', color: 'bg-sky-500' }
+    ];
+
+    const initialTasks = [
+      { id: 1, projectId: 'proj-1', title: 'Draft Q3 Strategy Doc', status: 'IN_PROGRESS', priority: 'HIGH', type: 'DEEP_WORK' },
+      { id: 2, projectId: 'proj-2', title: 'Respond to Vendor Emails', status: 'TODO', priority: 'MEDIUM', type: 'SHALLOW_WORK' },
+      { id: 3, projectId: 'proj-1', title: 'Weekly Sprint Planning', status: 'DONE', priority: 'HIGH', type: 'COLLABORATION' },
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [projects, setProjects] = useState(initialProjects);
+      const [tasks, setTasks] = useState(initialTasks);
+      const [heatmapData, setHeatmapData] = useState(generateHeatmapData());
+      
+      const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+      const [editingTask, setEditingTask] = useState(null);
+      const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+      const [editingProject, setEditingProject] = useState(null);
+      const [selectedProjectId, setSelectedProjectId] = useState('ALL');
+      
+      const [isHeatmapModalOpen, setIsHeatmapModalOpen] = useState(false);
+      const [editingHeatmapDate, setEditingHeatmapDate] = useState(null);
+
+      const [isDataModalOpen, setIsDataModalOpen] = useState(false);
+      const [importStatus, setImportStatus] = useState(null);
+
+      const [timerStatus, setTimerStatus] = useState('STOPPED'); 
+      const [timeLeft, setTimeLeft] = useState(25 * 60); 
+      const [currentFocusType, setCurrentFocusType] = useState('DEEP_WORK');
+
+      const stats = useMemo(() => {
+        return {
+          completionRate: Math.round((tasks.filter(t => t.status === 'DONE').length / tasks.length) * 100) || 0,
+          activeDeepWork: tasks.filter(t => t.type === 'DEEP_WORK' && t.status !== 'DONE').length,
+          currentStreak: 12, 
+          totalFocusHours: 42.5 
+        };
+      }, [tasks]);
+
+      useEffect(() => {
+        let interval = null;
+        if (timerStatus === 'RUNNING' && timeLeft > 0) {
+          interval = setInterval(() => {
+            setTimeLeft((prev) => prev - 1);
+          }, 1000);
+        } else if (timeLeft === 0) {
+          setTimerStatus('STOPPED');
+        }
+        return () => clearInterval(interval);
+      }, [timerStatus, timeLeft]);
+
+      const toggleTimer = () => {
+        if (timerStatus === 'RUNNING') setTimerStatus('PAUSED');
+        else setTimerStatus('RUNNING');
+      };
+
+      const resetTimer = () => {
+        setTimerStatus('STOPPED');
+        setTimeLeft(25 * 60);
+      };
+
+      const recordActivity = (activityType = 'ADMIN') => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        setHeatmapData(prevData => {
+          const todayIndex = prevData.findIndex(d => d.date === todayStr);
+          if (todayIndex === -1) return prevData; 
+          
+          const newData = [...prevData];
+          const todayData = newData[todayIndex];
+          
+          newData[todayIndex] = {
+            ...todayData,
+            level: Math.min(todayData.level + 1, 4),
+            dominantType: activityType
+          };
+          
+          return newData;
+        });
+      };
+
+      const exportTasksToCSV = () => {
+        const headers = ['ID', 'Project Name', 'Task Title', 'Status', 'Priority', 'Focus Type'];
+        const rows = tasks.map(t => {
+          const projectName = projects.find(p => p.id === t.projectId)?.name || 'No Project';
+          return [
+            t.id,
+            `"${projectName}"`,
+            `"${t.title.replace(/"/g, '""')}"`, 
+            t.status,
+            t.priority,
+            t.type
+          ].join(',');
+        });
+        
+        const csvContent = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', 'focusmaster_tasks.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const exportFullBackup = () => {
+        const data = { projects, tasks, heatmapData };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', 'focusmaster_backup.json');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const handleImportBackup = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (data.projects && Array.isArray(data.projects)) setProjects(data.projects);
+            if (data.tasks && Array.isArray(data.tasks)) setTasks(data.tasks);
+            if (data.heatmapData && Array.isArray(data.heatmapData)) setHeatmapData(data.heatmapData);
+            
+            setImportStatus({ type: 'success', message: 'Data successfully restored!' });
+            setTimeout(() => setImportStatus(null), 4000);
+          } catch (error) {
+            setImportStatus({ type: 'error', message: 'Invalid file format. Please upload a valid JSON backup file.' });
+            setTimeout(() => setImportStatus(null), 4000);
+          }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; 
+      };
+
+      const handleSaveTask = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const taskData = {
+          title: formData.get('title'),
+          projectId: formData.get('projectId'),
+          status: formData.get('status'),
+          priority: formData.get('priority'),
+          type: formData.get('type')
+        };
+
+        if (editingTask) {
+          setTasks(tasks.map(t => t.id === editingTask.id ? { ...t, ...taskData } : t));
+        } else {
+          setTasks([...tasks, { id: Date.now(), ...taskData }]);
+        }
+        
+        recordActivity(taskData.type);
+        setIsTaskModalOpen(false);
+        setEditingTask(null);
+      };
+
+      const handleDeleteTask = (id) => {
+        setTasks(tasks.filter(t => t.id !== id));
+        recordActivity('ADMIN'); 
+      };
+
+      const handleSaveProject = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const projectData = {
+          name: formData.get('name'),
+          color: formData.get('color')
+        };
+
+        if (editingProject) {
+          setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...projectData } : p));
+        } else {
+          setProjects([...projects, { id: `proj-${Date.now()}`, ...projectData }]);
+        }
+        
+        recordActivity('ADMIN');
+        setIsProjectModalOpen(false);
+        setEditingProject(null);
+      };
+
+      const handleDeleteProject = (id) => {
+        setProjects(projects.filter(p => p.id !== id));
+        setTasks(tasks.filter(t => t.projectId !== id)); 
+        if (selectedProjectId === id) setSelectedProjectId('ALL');
+        
+        recordActivity('ADMIN');
+      };
+
+      const openTaskModal = (task = null) => {
+        setEditingTask(task);
+        setIsTaskModalOpen(true);
+      };
+
+      const openProjectModal = (project = null) => {
+        setEditingProject(project);
+        setIsProjectModalOpen(true);
+      };
+
+      const openHeatmapModal = (dayData) => {
+        setEditingHeatmapDate(dayData);
+        setIsHeatmapModalOpen(true);
+      };
+
+      const handleSaveHeatmap = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const level = parseInt(formData.get('level'), 10);
+        const dominantType = formData.get('dominantType');
+
+        setHeatmapData(heatmapData.map(d => 
+          d.date === editingHeatmapDate.date 
+            ? { ...d, level, dominantType } 
+            : d
+        ));
+        
+        setIsHeatmapModalOpen(false);
+        setEditingHeatmapDate(null);
+      };
+
+      const formatTime = (seconds) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      };
+
+      const TaskModal = () => {
+        if (!isTaskModalOpen) return null;
+        return (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex justify-between items-center p-4 border-b border-slate-800">
+                <h3 className="text-lg font-semibold text-white">{editingTask ? 'Edit Task' : 'New Task'}</h3>
+                <button onClick={() => { setIsTaskModalOpen(false); setEditingTask(null); }} className="text-slate-400 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleSaveTask} className="p-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Task Title</label>
+                  <input required name="title" defaultValue={editingTask?.title || ''} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500" placeholder="e.g., Draft Q3 Report" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Project</label>
+                    <select name="projectId" defaultValue={editingTask?.projectId || (selectedProjectId !== 'ALL' ? selectedProjectId : projects[0]?.id)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500">
+                      {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Status</label>
+                    <select name="status" defaultValue={editingTask?.status || 'TODO'} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500">
+                      <option value="TODO">To Do</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="DONE">Completed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Priority</label>
+                    <select name="priority" defaultValue={editingTask?.priority || 'MEDIUM'} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500">
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Focus Type</label>
+                    <select name="type" defaultValue={editingTask?.type || 'DEEP_WORK'} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500">
+                      {Object.values(LEGEND).map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-800">
+                  <button type="button" onClick={() => { setIsTaskModalOpen(false); setEditingTask(null); }} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors">Save Task</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      };
+
+      const DataModal = () => {
+        if (!isDataModalOpen) return null;
+        return (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex justify-between items-center p-4 border-b border-slate-800">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Database size={20} className="text-violet-500" /> Data Management</h3>
+                <button onClick={() => { setIsDataModalOpen(false); setImportStatus(null); }} className="text-slate-400 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-8">
+                {importStatus && (
+                  <div className={`p-3 rounded-lg text-sm font-medium ${importStatus.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                    {importStatus.message}
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-slate-200">Excel / Spreadsheet Export</h4>
+                    <p className="text-xs text-slate-400 mt-1">Download your tasks as a CSV file to open natively in Excel, Google Sheets, or Numbers.</p>
+                  </div>
+                  <button 
+                    onClick={exportTasksToCSV}
+                    className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors border border-slate-700"
+                  >
+                    <FileSpreadsheet size={18} className="text-emerald-500" /> Download Tasks as CSV
+                  </button>
+                </div>
+
+                <div className="h-px w-full bg-slate-800"></div>
+
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-slate-200">Full Workspace Backup & Restore</h4>
+                    <p className="text-xs text-slate-400 mt-1">Export all projects, tasks, and consistency data as a JSON file, or restore from a previous backup.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={exportFullBackup}
+                      className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors border border-slate-700"
+                    >
+                      <Download size={18} className="text-violet-400" /> Save Backup
+                    </button>
+                    <label className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer">
+                      <Upload size={18} /> Restore Data
+                      <input type="file" accept=".json" className="hidden" onChange={handleImportBackup} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const ProjectModal = () => {
+        if (!isProjectModalOpen) return null;
+        return (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex justify-between items-center p-4 border-b border-slate-800">
+                <h3 className="text-lg font-semibold text-white">{editingProject ? 'Edit Project' : 'New Project'}</h3>
+                <button onClick={() => { setIsProjectModalOpen(false); setEditingProject(null); }} className="text-slate-400 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleSaveProject} className="p-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Project Name</label>
+                  <input required name="name" defaultValue={editingProject?.name || ''} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500" placeholder="e.g., Q4 Marketing" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Color Theme</label>
+                  <select name="color" defaultValue={editingProject?.color || 'bg-violet-500'} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500">
+                    <option value="bg-violet-500">Violet</option>
+                    <option value="bg-sky-500">Sky Blue</option>
+                    <option value="bg-emerald-500">Emerald</option>
+                    <option value="bg-amber-500">Amber</option>
+                    <option value="bg-rose-500">Rose</option>
+                    <option value="bg-slate-500">Slate</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-800">
+                  <button type="button" onClick={() => { setIsProjectModalOpen(false); setEditingProject(null); }} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors">Save Project</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      };
+
+      const HeatmapModal = () => {
+        if (!isHeatmapModalOpen || !editingHeatmapDate) return null;
+        return (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex justify-between items-center p-4 border-b border-slate-800">
+                <h3 className="text-lg font-semibold text-white">Edit Day: {editingHeatmapDate.date}</h3>
+                <button onClick={() => { setIsHeatmapModalOpen(false); setEditingHeatmapDate(null); }} className="text-slate-400 hover:text-white">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleSaveHeatmap} className="p-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Intensity Level (0-4)</label>
+                  <select name="level" defaultValue={editingHeatmapDate.level} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500">
+                    <option value="0">0 - No Activity</option>
+                    <option value="1">1 - Light Activity</option>
+                    <option value="2">2 - Moderate Activity</option>
+                    <option value="3">3 - High Activity</option>
+                    <option value="4">4 - Peak Activity</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Dominant Focus Type</label>
+                  <select name="dominantType" defaultValue={editingHeatmapDate.dominantType || 'DEEP_WORK'} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-violet-500">
+                    {Object.values(LEGEND).map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+                  </select>
+                </div>
+                <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-slate-800">
+                  <button type="button" onClick={() => { setIsHeatmapModalOpen(false); setEditingHeatmapDate(null); }} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Cancel</button>
+                  <button type="submit" className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors">Update Day</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      };
+
+      const LegendDisplay = () => (
+        <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+          <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+            <Info size={16} /> Advanced Methodology Legend
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            {Object.values(LEGEND).map((item) => (
+              <div key={item.id} className="flex flex-col gap-1 p-3 rounded-lg bg-slate-900 border border-slate-700">
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                  <span className="font-medium text-slate-200 text-sm">{item.label}</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-snug">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+      const Navigation = () => (
+        <nav className="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
+          <div className="p-6">
+            <h1 className="text-xl font-bold text-white flex items-center gap-2 tracking-tight">
+              <div className="w-6 h-6 rounded bg-gradient-to-br from-violet-500 to-sky-500 flex items-center justify-center">
+                <Clock size={14} className="text-white" />
+              </div>
+              FocusMaster<span className="text-violet-400">Pro</span>
+            </h1>
+          </div>
+          <div className="flex-1 px-4 space-y-1">
+            {[
+              { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+              { id: 'focus', icon: Timer, label: 'Focus Timer' },
+              { id: 'projects', icon: KanbanSquare, label: 'Projects & Tasks' },
+              { id: 'consistency', icon: TrendingUp, label: 'Consistency' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === item.id 
+                    ? 'bg-violet-500/10 text-violet-400' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                }`}
+              >
+                <item.icon size={18} />
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div className="p-4 border-t border-slate-800 mt-auto">
+            <button
+              onClick={() => setIsDataModalOpen(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+            >
+              <Database size={18} />
+              Data Management
+            </button>
+          </div>
+        </nav>
+      );
+
+      const renderDashboard = () => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Current Streak', value: `${stats.currentStreak} Days`, icon: TrendingUp, color: 'text-amber-500' },
+              { label: 'Task Completion', value: `${stats.completionRate}%`, icon: CheckCircle2, color: 'text-emerald-500' },
+              { label: 'Total Focus Hours', value: stats.totalFocusHours, icon: Clock, color: 'text-sky-500' },
+              { label: 'Pending Deep Work', value: stats.activeDeepWork, icon: Circle, color: 'text-violet-500' },
+            ].map((stat, i) => (
+              <div key={i} className="bg-slate-800 p-5 rounded-xl border border-slate-700 flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-slate-400 mb-1">{stat.label}</p>
+                  <h4 className="text-2xl font-bold text-white">{stat.value}</h4>
+                </div>
+                <stat.icon className={`w-6 h-6 ${stat.color} opacity-80`} />
+              </div>
+            ))}
+          </div>
+
+          <LegendDisplay />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+              <h3 className="text-lg font-semibold text-white mb-4">Quick Timer</h3>
+              <div className="flex flex-col items-center justify-center p-8 bg-slate-900 rounded-lg border border-slate-700">
+                <div className={`text-6xl font-mono font-light mb-6 tracking-tight ${timerStatus === 'RUNNING' ? LEGEND[currentFocusType].text : 'text-slate-300'}`}>
+                  {formatTime(timeLeft)}
+                </div>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={toggleTimer}
+                    className={`p-4 rounded-full flex items-center justify-center transition-colors ${
+                      timerStatus === 'RUNNING' ? 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30' : 'bg-violet-500 hover:bg-violet-600 text-white'
+                    }`}
+                  >
+                    {timerStatus === 'RUNNING' ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
+                  </button>
+                  <button 
+                    onClick={resetTimer}
+                    className="p-4 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 transition-colors border border-slate-700"
+                  >
+                    <Square size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-white">Priority Tasks</h3>
+                <button onClick={() => setActiveTab('projects')} className="text-sm text-violet-400 hover:text-violet-300">View All</button>
+              </div>
+              <div className="space-y-3">
+                {tasks.filter(t => t.status !== 'DONE').slice(0, 4).map(task => (
+                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-900 border border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-8 rounded-full ${LEGEND[task.type].color}`}></div>
+                      <div>
+                        <h4 className="text-sm font-medium text-slate-200">{task.title}</h4>
+                        <span className="text-xs text-slate-500">{LEGEND[task.type].label}</span>
+                      </div>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded font-medium ${
+                      task.priority === 'HIGH' ? 'bg-red-500/10 text-red-400' :
+                      task.priority === 'MEDIUM' ? 'bg-orange-500/10 text-orange-400' :
+                      'bg-blue-500/10 text-blue-400'
+                    }`}>
+                      {task.priority}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderFocus = () => (
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="text-center space-y-2 mb-8">
+            <h2 className="text-3xl font-bold text-white">Timeboxing Engine</h2>
+            <p className="text-slate-400">Allocate your cognitive resources intentionally.</p>
+          </div>
+
+          <div className="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
+            <div className="flex flex-wrap gap-2 justify-center mb-10">
+              {Object.values(LEGEND).map((type) => (
+                <button
+                  key={type.id}
+                  onClick={() => setCurrentFocusType(type.id)}
+                  disabled={timerStatus === 'RUNNING'}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    currentFocusType === type.id 
+                      ? `${type.color} text-white shadow-lg shadow-${type.color.replace('bg-', '')}/20` 
+                      : 'bg-slate-900 text-slate-400 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative flex justify-center items-center py-12">
+              <div className={`text-8xl md:text-[150px] font-mono font-light tracking-tighter tabular-nums z-10 transition-colors duration-500 ${
+                 timerStatus === 'RUNNING' ? LEGEND[currentFocusType].text : 'text-slate-200'
+              }`}>
+                {formatTime(timeLeft)}
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-6 mt-8">
+              <button 
+                onClick={toggleTimer}
+                className={`px-8 py-4 rounded-xl flex items-center gap-3 text-lg font-semibold transition-all ${
+                  timerStatus === 'RUNNING' 
+                    ? 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30' 
+                    : `${LEGEND[currentFocusType].color} text-white hover:opacity-90 shadow-xl`
+                }`}
+              >
+                {timerStatus === 'RUNNING' ? <><Pause /> Pause Session</> : <><Play /> Start Focus</>}
+              </button>
+              <button 
+                onClick={resetTimer}
+                className="px-6 py-4 rounded-xl bg-slate-900 hover:bg-slate-700 text-slate-400 transition-colors border border-slate-700 font-medium"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+          
+          <LegendDisplay />
+        </div>
+      );
+
+      const renderProjects = () => {
+        const moveTask = (taskId, newStatus) => {
+          const task = tasks.find(t => t.id === taskId);
+          setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+          if (task) recordActivity(task.type);
+        };
+
+        const filteredTasks = selectedProjectId === 'ALL' 
+          ? tasks 
+          : tasks.filter(t => t.projectId === selectedProjectId);
+
+        const TaskCard = ({ task }) => {
+          const project = projects.find(p => p.id === task.projectId);
+          return (
+          <div className="bg-slate-900 p-4 rounded-lg border border-slate-700 shadow-sm hover:border-slate-600 transition-colors group relative">
+            <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => openTaskModal(task)} className="p-1.5 text-slate-400 hover:text-violet-400 bg-slate-800 rounded transition-colors" title="Edit Task">
+                <Edit2 size={14} />
+              </button>
+              <button onClick={() => handleDeleteTask(task.id)} className="p-1.5 text-slate-400 hover:text-red-400 bg-slate-800 rounded transition-colors" title="Delete Task">
+                <Trash2 size={14} />
+              </button>
+            </div>
+            
+            <div className="flex justify-between items-start mb-2 pr-16">
+              <div className="flex flex-col gap-2">
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded w-fit ${
+                  task.priority === 'HIGH' ? 'bg-red-500/10 text-red-400' :
+                  task.priority === 'MEDIUM' ? 'bg-orange-500/10 text-orange-400' :
+                  'bg-blue-500/10 text-blue-400'
+                }`}>
+                  {task.priority}
+                </span>
+                {project && <span className="text-xs text-slate-400 flex items-center gap-1.5"><Folder size={12}/> {project.name}</span>}
+              </div>
+              <div className={`w-2.5 h-2.5 rounded-full ${LEGEND[task.type].color} mt-1`} title={LEGEND[task.type].label}></div>
+            </div>
+            
+            <h4 className="text-sm font-medium text-slate-200 mb-4 mt-2">{task.title}</h4>
+            
+            <div className="flex gap-2 mt-auto opacity-0 group-hover:opacity-100 transition-opacity">
+              {task.status !== 'TODO' && (
+                <button onClick={() => moveTask(task.id, 'TODO')} className="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded hover:bg-slate-700">To Do</button>
+              )}
+              {task.status !== 'IN_PROGRESS' && (
+                <button onClick={() => moveTask(task.id, 'IN_PROGRESS')} className="text-xs bg-violet-500/20 text-violet-400 px-2 py-1 rounded hover:bg-violet-500/30">Doing</button>
+              )}
+              {task.status !== 'DONE' && (
+                <button onClick={() => moveTask(task.id, 'DONE')} className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded hover:bg-emerald-500/30">Done</button>
+              )}
+            </div>
+          </div>
+          );
+        };
+
+        return (
+          <div className="h-full flex flex-col space-y-6">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Project Pipeline</h2>
+                <p className="text-slate-400 text-sm">Agile tracking integrated with focus methodology.</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <select 
+                  value={selectedProjectId} 
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-violet-500 min-w-[150px]"
+                >
+                  <option value="ALL">All Projects</option>
+                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <button onClick={() => openProjectModal()} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors border border-slate-700">
+                  <Folder size={16} /> New Project
+                </button>
+                <button onClick={() => openTaskModal()} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                  <Plus size={16} /> New Task
+                </button>
+              </div>
+            </div>
+
+            {selectedProjectId !== 'ALL' && (
+              <div className="flex justify-between items-center bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${projects.find(p => p.id === selectedProjectId)?.color || 'bg-slate-500'}`}></div>
+                  <span className="text-slate-200 font-medium">{projects.find(p => p.id === selectedProjectId)?.name}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => openProjectModal(projects.find(p => p.id === selectedProjectId))} className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded transition-colors flex items-center gap-1"><Edit2 size={12}/> Edit</button>
+                  <button onClick={() => handleDeleteProject(selectedProjectId)} className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1.5 rounded transition-colors flex items-center gap-1"><Trash2 size={12}/> Delete</button>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-[400px] pb-4">
+              {[
+                { id: 'TODO', label: 'To Do', color: 'border-slate-500' },
+                { id: 'IN_PROGRESS', label: 'In Progress', color: 'border-violet-500' },
+                { id: 'DONE', label: 'Completed', color: 'border-emerald-500' }
+              ].map(col => (
+                <div key={col.id} className="bg-slate-800 rounded-xl border border-slate-700 flex flex-col h-full overflow-hidden">
+                  <div className={`p-4 border-b-2 ${col.color} bg-slate-800/50 rounded-t-xl shrink-0`}>
+                    <h3 className="font-semibold text-slate-200 flex justify-between items-center">
+                      {col.label}
+                      <span className="bg-slate-700 text-slate-300 text-xs px-2 py-0.5 rounded-full">
+                        {filteredTasks.filter(t => t.status === col.id).length}
+                      </span>
+                    </h3>
+                  </div>
+                  <div className="p-4 space-y-3 overflow-y-auto flex-1 custom-scrollbar">
+                    {filteredTasks.filter(t => t.status === col.id).map(task => (
+                      <TaskCard key={task.id} task={task} />
+                    ))}
+                    {filteredTasks.filter(t => t.status === col.id).length === 0 && (
+                      <div className="text-center p-4 text-sm text-slate-500 border border-dashed border-slate-700 rounded-lg">
+                        No tasks in this column.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      };
+
+      const renderConsistency = () => {
+        const getIntensityColor = (level, type) => {
+          if (level === 0 || !type) return 'bg-slate-800 border-slate-700';
+          
+          const baseColors = {
+            'DEEP_WORK': ['bg-violet-900', 'bg-violet-700', 'bg-violet-500', 'bg-violet-400'],
+            'SHALLOW_WORK': ['bg-sky-900', 'bg-sky-700', 'bg-sky-500', 'bg-sky-400'],
+            'COLLABORATION': ['bg-amber-900', 'bg-amber-700', 'bg-amber-500', 'bg-amber-400'],
+            'ADMIN': ['bg-slate-700', 'bg-slate-600', 'bg-slate-500', 'bg-slate-400'],
+            'REST': ['bg-emerald-900', 'bg-emerald-700', 'bg-emerald-500', 'bg-emerald-400'],
+          };
+          
+          return `${baseColors[type][level - 1]} border-transparent`;
+        };
+
+        const activeDaysCount = heatmapData.filter(d => d.level > 0).length;
+        const consistencyScore = heatmapData.length > 0 ? Math.round((activeDaysCount / heatmapData.length) * 100) : 0;
+
+        const typeCounts = heatmapData.reduce((acc, day) => {
+          if (day.level > 0 && day.dominantType) {
+            acc[day.dominantType] = (acc[day.dominantType] || 0) + 1;
+          }
+          return acc;
+        }, {});
+
+        let overallDominantType = 'DEEP_WORK';
+        let maxTypeCount = 0;
+        
+        Object.entries(typeCounts).forEach(([type, count]) => {
+          if (count > maxTypeCount) {
+            maxTypeCount = count;
+            overallDominantType = type;
+          }
+        });
+
+        const dominantPercentage = activeDaysCount > 0 ? Math.round((maxTypeCount / activeDaysCount) * 100) : 0;
+        const dominantLegendInfo = LEGEND[overallDominantType] || LEGEND['DEEP_WORK'];
+        
+        const getScoreColor = (score) => {
+          if (score >= 75) return { text: 'text-emerald-400', bg: 'bg-emerald-400' };
+          if (score >= 40) return { text: 'text-amber-400', bg: 'bg-amber-400' };
+          return { text: 'text-rose-400', bg: 'bg-rose-400' };
+        };
+        const scoreColors = getScoreColor(consistencyScore);
+
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Consistency Matrix</h2>
+                <p className="text-slate-400 text-sm">90-day overview of your cognitive allocation.</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-800 p-8 rounded-xl border border-slate-700">
+              <div className="flex flex-col xl:flex-row items-center gap-8">
+                <div className="flex-1">
+                   <h3 className="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+                    <Calendar size={16} /> Last 90 Days Activity
+                  </h3>
+                  
+                  <div className="flex flex-wrap gap-1.5 max-w-3xl">
+                    {heatmapData.map((day, i) => (
+                      <button 
+                        key={i}
+                        onClick={() => openHeatmapModal(day)}
+                        className={`w-4 h-4 md:w-5 md:h-5 rounded-sm border ${getIntensityColor(day.level, day.dominantType)} transition-all hover:scale-110 hover:ring-2 ring-white/20 cursor-pointer`}
+                        title={`${day.date}: Level ${day.level} - ${day.level > 0 ? LEGEND[day.dominantType]?.label : 'No Data'} (Click to edit)`}
+                      ></button>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-6 flex items-center gap-4 text-xs text-slate-400">
+                    <span>Less Focus</span>
+                    <div className="flex gap-1">
+                      <div className="w-4 h-4 rounded-sm bg-slate-800 border border-slate-700"></div>
+                      <div className="w-4 h-4 rounded-sm bg-violet-900"></div>
+                      <div className="w-4 h-4 rounded-sm bg-violet-700"></div>
+                      <div className="w-4 h-4 rounded-sm bg-violet-500"></div>
+                    </div>
+                    <span>More Focus (Deep Work Example)</span>
+                  </div>
+                </div>
+
+                <div className="w-full xl:w-64 space-y-4 shrink-0">
+                  <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                    <p className="text-xs text-slate-400 mb-1">Dominant Focus Pattern</p>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${dominantLegendInfo.color}`}></div>
+                      <p className="font-semibold text-white">{dominantLegendInfo.label}</p>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-2">Accounts for {dominantPercentage}% of your tracked active days.</p>
+                  </div>
+                  
+                  <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                    <p className="text-xs text-slate-400 mb-1">Consistency Score</p>
+                    <p className={`text-2xl font-bold ${scoreColors.text}`}>{consistencyScore}/100</p>
+                    <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                      <div className={`${scoreColors.bg} h-1.5 rounded-full transition-all duration-1000`} style={{ width: `${consistencyScore}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <LegendDisplay />
+          </div>
+        );
+      };
+
+      return (
+        <div className="flex h-screen bg-slate-950 font-sans overflow-hidden selection:bg-violet-500/30">
+          <Navigation />
+          
+          <main className="flex-1 flex flex-col h-full overflow-hidden">
+            <header className="h-16 flex items-center justify-between px-8 bg-slate-900/50 backdrop-blur-md border-b border-slate-800/50 z-10 shrink-0">
+              <h2 className="text-lg font-medium text-slate-200 capitalize">{activeTab.replace('-', ' ')}</h2>
+              <div className="flex items-center gap-4">
+                {timerStatus === 'RUNNING' && activeTab !== 'focus' && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 cursor-pointer" onClick={() => setActiveTab('focus')}>
+                    <div className={`w-2 h-2 rounded-full animate-pulse ${LEGEND[currentFocusType].color}`}></div>
+                    <span className="text-xs font-mono text-slate-300">{formatTime(timeLeft)}</span>
+                  </div>
+                )}
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-600 to-sky-600 flex items-center justify-center text-white text-sm font-bold border-2 border-slate-900 ring-2 ring-slate-800 cursor-pointer">
+                  JD
+                </div>
+              </div>
+            </header>
+
+            <div className="flex-1 overflow-auto p-4 md:p-8 custom-scrollbar">
+              {activeTab === 'dashboard' && renderDashboard()}
+              {activeTab === 'focus' && renderFocus()}
+              {activeTab === 'projects' && renderProjects()}
+              {activeTab === 'consistency' && renderConsistency()}
+            </div>
+          </main>
+
+          <DataModal />
+          <TaskModal />
+          <ProjectModal />
+          <HeatmapModal />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(30, 41, 59, 0.5); 
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(71, 85, 105, 0.8); 
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 1); 
+    }
+  </style>
+</body>
+</html>
